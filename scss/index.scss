@@ -1,0 +1,226 @@
+$primary: #219bb2;
+$primary-hover: #43afbf;
+$success: rgb(39, 185, 110);
+$error: rgb(223, 56, 72);
+$dark: rgba(0, 0, 0, 0.65);
+$title: #333333;
+$grey: #757575;
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap");
+
+* {
+  font-family: Poppins;
+}
+
+.container {
+  width: 35rem;
+  padding: 2.5rem 0;
+  margin: 1.8rem auto;
+  display: flex;
+  flex-flow: column;
+  border: 1px solid rgba($grey, 0.5);
+  border-radius: 4px;
+  .logo {
+    margin: 0 4rem;
+    width: 170px;
+    height: 40px;
+    background: url("../img/savepay.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+
+  .title {
+    margin: 0 4rem;
+    font-size: 16px;
+    font-weight: bold;
+    color: $title;
+  }
+
+  .payment-details {
+    color: rgba($title, 0.6);
+    margin: 3rem 4rem;
+    font-size: 13px;
+    display: flex;
+    flex-flow: column;
+
+    span {
+      margin-bottom: 2px;
+    }
+  }
+
+  .form {
+    padding: 2rem 4rem;
+    .form-group {
+      width: 100%;
+      margin-bottom: 1.8rem;
+      .outlined-input-field {
+        position: relative;
+        width: 100%;
+
+        i {
+          background-image: none;
+          position: absolute;
+          top: 0.8rem;
+          right: 0.8rem;
+          width: 28px;
+          height: 18px;
+        }
+
+        .suffix-mastercard {
+          background-image: url("../img/mastercard-icon.svg");
+          background-repeat: no-repeat;
+          background-size: contain;
+        }
+
+        .suffix-visa {
+          background-image: url("../img/visa-icon.svg");
+          background-repeat: no-repeat;
+          background-size: contain;
+          position: absolute;
+          top: 1rem;
+          width: 32px;
+          height: 18px;
+        }
+
+        .error-icon,
+        .warning-icon,
+        .helper-text {
+          display: none;
+        }
+
+        label {
+          background-color: #fff;
+          color: $grey;
+          cursor: text;
+          position: absolute;
+          top: 0.8rem;
+          left: 1rem;
+          font-size: 12.5px;
+        }
+
+        .outlined-text-field {
+          appearance: none;
+          -moz-appearance: none;
+          -webkit-appearance: none;
+          background-color: #fff;
+          border: 1pt solid rgba($grey, 0.5);
+          border-radius: 4px;
+          color: $grey;
+          padding: 0.6rem;
+          width: calc(100% - 1.3rem);
+        }
+
+        .outlined-text-field:hover {
+          border-color: $primary;
+        }
+
+        .outlined-text-field:focus {
+          color: $dark;
+          outline: none;
+          border: 1px solid $primary;
+
+          + label {
+            color: $primary !important;
+          }
+        }
+      }
+
+      .inline-form-group {
+        display: flex;
+        flex-flow: row;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        width: 100%;
+
+        div:nth-of-type(1) {
+          margin-right: 1rem;
+        }
+
+        div:nth-of-type(2) {
+          flex: 1 1 15em;
+        }
+      }
+
+      .button {
+        float: right;
+        width: 9.2rem;
+        height: 42px;
+        background: $primary;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #fff;
+        margin-top: 5px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+        &:hover,
+        &:active,
+        &:focus {
+          background: $primary-hover;
+          border: none !important;
+          outline: none;
+        }
+      }
+    }
+  }
+
+  .verified {
+    display: flex;
+    width: 350px;
+    height: 50px;
+    justify-content: center;
+    align-items: center;
+    background: url("../img/verified.svg");
+    background-repeat: no-repeat;
+    background-size: contain;
+    margin: 2rem auto;
+    margin-bottom: 0;
+  }
+
+  @media only screen and (max-width: 375px) {
+    padding: 1rem 0;
+    .logo {
+      margin: 0 1rem !important;
+    }
+    .title {
+      margin: 0 1rem !important;
+    }
+    .payment-details {
+      margin: 1rem !important;
+    }
+    .form {
+      padding: 1rem !important;
+
+      .button {
+        width: 48% !important;
+      }
+    }
+  }
+
+  /* Custom, iPhone Retina */
+  @media only screen and (max-width: 575px) {
+    width: 95%;
+    margin: 1rem auto;
+    .logo {
+      margin: 0 2rem;
+    }
+    .title {
+      margin: 0 2rem;
+      font-size: 3.5vw;
+    }
+    .payment-details {
+      margin: 1rem 2rem;
+      font-size: 2.6vw;
+    }
+    .form {
+      padding: 2rem;
+
+      .button {
+        width: 41% !important;
+      }
+    }
+  }
+}

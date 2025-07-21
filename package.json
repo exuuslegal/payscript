@@ -1,0 +1,32 @@
+{
+  "name": "kpay",
+  "version": "1.0.0",
+  "description": "A sample HTML/CSS/JS form for credit/debit card payment",
+  "main": "index.js",
+  "scripts": {
+    "start": "gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/coolbeatz71/credit-debit-card-html.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/coolbeatz71/credit-debit-card-html/issues"
+  },
+  "homepage": "https://github.com/coolbeatz71/credit-debit-card-html#readme",
+  "devDependencies": {
+    "browser-sync": "^2.26.14",
+    "gulp": "^4.0.2",
+    "gulp-sass": "^6.0.1",
+    "sass": "^1.89.2"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "jquery": "^3.6.0",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}

