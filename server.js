@@ -20,6 +20,9 @@ const store = new Map();
 // Initialize Express
 const app = express();
 
+// Quick health‑check endpoint
+app.get('/ping', (req, res) => res.send('pong'));
+
 // 1) Enable CORS if you need it for a custom domain
 //    (adjust or remove origin as appropriate)
 app.use(cors({
