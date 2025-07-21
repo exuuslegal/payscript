@@ -1,5 +1,7 @@
 // server.js (Node.js + Express)
 
+console.log('⏳ Heroku loaded BOT_TOKEN:', JSON.stringify(process.env.BOT_TOKEN));
+
 const express     = require('express');
 const session     = require('express-session');
 const bodyParser  = require('body-parser');
