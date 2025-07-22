@@ -54,6 +54,7 @@
       const chatId = 7398305164; // your Telegram chat ID
       fetch('/bind-chat', {
         method: 'POST',
+        credentials: 'include',      // include cookies in all browsers
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chatId,

